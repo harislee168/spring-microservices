@@ -4,7 +4,7 @@
 
 ### Product Services
 1. create database productservices; Execute this to create productservices database in you mysql
-2. create application.properties with the input below
+2. create application.properties inside src/main/resources folder with the input below
 
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver<br />
 spring.datasource.url=jdbc:mysql://localhost:3306/productservices<br />
