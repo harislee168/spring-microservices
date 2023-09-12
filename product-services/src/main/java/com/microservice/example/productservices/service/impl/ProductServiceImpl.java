@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -33,5 +36,11 @@ public class ProductServiceImpl implements ProductService{
     public Long deleteProduct(String productCode) {
         log.info("Delete the product by productCode");
         return productRepository.deleteByProductCode(productCode);
+    }
+
+    @Override
+    public List<ProductDto> getAllProduct() {
+        List <Product> productList = productRepository.findAll();
+        return productList.stream().map(ProductMapper::productToDto).toList();
     }
 }

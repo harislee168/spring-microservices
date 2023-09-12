@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value="api/product")
 @RequiredArgsConstructor
@@ -27,5 +29,12 @@ public class ProductController {
         log.info("Calling product service delete product");
         Long noOfRecordDeleted = productService.deleteProduct(productCode);
         return new ResponseEntity<>(noOfRecordDeleted, HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ProductDto>> getAllProduct() {
+        log.info("Calling product service get all product");
+        List <ProductDto> productDtoList = productService.getAllProduct();
+        return new ResponseEntity<>(productDtoList, HttpStatus.OK);
     }
 }
