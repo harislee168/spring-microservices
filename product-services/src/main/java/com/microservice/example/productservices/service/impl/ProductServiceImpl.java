@@ -28,4 +28,10 @@ public class ProductServiceImpl implements ProductService{
         log.info("Return back the saved product as product dto");
         return ProductMapper.productToDto(savedProduct);
     }
+
+    @Override
+    public Long deleteProduct(String productCode) {
+        log.info("Delete the product by productCode");
+        return productRepository.deleteByProductCode(productCode);
+    }
 }

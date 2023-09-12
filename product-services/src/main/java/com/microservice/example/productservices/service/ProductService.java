@@ -5,4 +5,5 @@ import com.microservice.example.productservices.dto.ProductDto;
 public interface ProductService {
 
     public ProductDto addProduct(ProductDto productDto);
+    public Long deleteProduct(String productCode);
 }
