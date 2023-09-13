@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value="api/inventory")
 @RequiredArgsConstructor
@@ -40,5 +42,10 @@ public class InventoryController {
         catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+    @GetMapping
+    public ResponseEntity<List<InventoryDto>> getAllInventory() {
+        List<InventoryDto> inventoryDtoList = inventoryService.getAllInventory();
+        return new ResponseEntity<>(inventoryDtoList, HttpStatus.OK);
     }
 }

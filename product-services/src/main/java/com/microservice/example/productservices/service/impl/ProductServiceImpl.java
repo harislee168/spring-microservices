@@ -16,8 +16,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -83,7 +86,29 @@ public class ProductServiceImpl implements ProductService{
     public List<ProductDto> getAllProduct() {
         log.info("Get all product");
         List <Product> productList = productRepository.findAll();
-        return productList.stream().map(ProductMapper::productToDto).toList();
+
+        log.info("Get all inventory");
+        Map<String, InventoryDto> inventoryDtoMap = webClient.get()
+                .uri("http://localhost:8082/api/inventory")
+                .retrieve().bodyToFlux(InventoryDto.class)
+                .collectMap(InventoryDto::getProductCode, Function.identity()).block();
+
+        if (inventoryDtoMap != null) {
+            log.info("Create complete product dto list");
+            List <ProductDto> productDtoList = new ArrayList<>();
+            for (Product product: productList) {
+                ProductDto productDto = ProductMapper.productToDto(product);
+                InventoryDto inventoryDto = inventoryDtoMap.get(productDto.getProductCode());
+                if (inventoryDto != null)
+                    productDto.setQuantity(inventoryDto.getQuantity());
+                productDtoList.add(productDto);
+            }
+            return productDtoList;
+        }
+        else {
+            log.info("Cannot find inventory");
+            return productList.stream().map(ProductMapper::productToDto).toList();
+        }
     }
 
     @Override

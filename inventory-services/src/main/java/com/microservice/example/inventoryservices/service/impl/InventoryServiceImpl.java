@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,6 +49,13 @@ public class InventoryServiceImpl implements InventoryService {
         else {
             throw new Exception("Invalid product code: Inventory not found");
         }
+    }
+
+    @Override
+    public List<InventoryDto> getAllInventory() {
+        log.info("Get all inventory");
+        List <Inventory> inventoryList = inventoryRepository.findAll();
+        return inventoryList.stream().map(InventoryMapper::inventoryToDto).toList();
     }
 
 }
