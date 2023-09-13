@@ -29,4 +29,16 @@ public class InventoryController {
         Long noOfRecordDeleted = inventoryService.deleteInventoryByProductCode(productCode);
         return new ResponseEntity<>(noOfRecordDeleted, HttpStatus.OK);
     }
+
+    @PutMapping(value="/modifyquantity")
+    public ResponseEntity<Void> modifyQuantity(@RequestParam(value="productCode") String productCode,
+                                               @RequestParam(value="quantity") int quantity) {
+        try {
+            inventoryService.modifyQuantity(productCode, quantity);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

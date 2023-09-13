@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,7 +81,23 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public List<ProductDto> getAllProduct() {
+        log.info("Get all product");
         List <Product> productList = productRepository.findAll();
         return productList.stream().map(ProductMapper::productToDto).toList();
+    }
+
+    @Override
+    public void modifyPrice(String productCode, BigDecimal price) throws Exception {
+        log.info("Get product by product code");
+        Optional <Product> optionalProduct = productRepository.findByProductCode(productCode);
+        if (optionalProduct.isPresent()) {
+            log.info("Set the product price and save");
+            Product product = optionalProduct.get();
+            product.setPrice(price);
+            productRepository.save(product);
+        }
+        else {
+            throw new Exception("Invalid product code: Product not found");
+        }
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -28,7 +29,6 @@ public class ProductController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @DeleteMapping
     public ResponseEntity<Long> deleteProduct(@RequestParam(value="productCode") String productCode) {
         try {
@@ -40,11 +40,21 @@ public class ProductController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @GetMapping
     public ResponseEntity<List<ProductDto>> getAllProduct() {
         log.info("Calling product service get all product");
         List <ProductDto> productDtoList = productService.getAllProduct();
         return new ResponseEntity<>(productDtoList, HttpStatus.OK);
+    }
+    @PutMapping(value="/modifyprice")
+    public ResponseEntity<Void> modifyPrice(@RequestParam(value="productCode") String productCode,
+                                      @RequestParam(value="price")BigDecimal price) {
+        try {
+            productService.modifyPrice(productCode, price);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
