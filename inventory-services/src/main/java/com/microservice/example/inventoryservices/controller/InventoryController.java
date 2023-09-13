@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value="api/inventory")
@@ -24,5 +21,12 @@ public class InventoryController {
         log.info("Calling inventory service add inventory");
         InventoryDto savedInventoryDto = inventoryService.addInventory(inventoryDto);
         return new ResponseEntity<>(savedInventoryDto, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Long> deleteInventory(@RequestParam(value="productCode") String productCode) {
+        log.info("Calling inventory service delete inventory");
+        Long noOfRecordDeleted = inventoryService.deleteInventoryByProductCode(productCode);
+        return new ResponseEntity<>(noOfRecordDeleted, HttpStatus.OK);
     }
 }

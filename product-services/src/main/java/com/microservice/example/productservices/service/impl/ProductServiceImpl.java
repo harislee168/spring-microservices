@@ -45,16 +45,36 @@ public class ProductServiceImpl implements ProductService{
                         .retrieve().bodyToMono(InventoryDto.class).block();
 
         log.info("Return back the saved product as product dto");
-        if (savedInventoryDto != null)
+        if (savedInventoryDto != null) {
+            log.info("Product and inventory record is saved successfully");
             return ProductMapper.productInventoryDtoToDto(savedProduct, savedInventoryDto);
-        else
+        }
+        else {
             throw new Exception("Fail in saving inventory");
+        }
     }
 
     @Override
-    public Long deleteProduct(String productCode) {
+    public Long deleteProduct(String productCode) throws Exception {
         log.info("Delete the product by productCode");
-        return productRepository.deleteByProductCode(productCode);
+        Long noOfDeletedProductRecord =  productRepository.deleteByProductCode(productCode);
+        log.info("Delete the inventory by productCode");
+        Long noOfDeletedInventoryRecord = webClient.delete()
+                .uri("http://localhost:8082/api/inventory?productCode=" + productCode)
+                .retrieve().bodyToMono(Long.class).block();
+
+        if (noOfDeletedInventoryRecord != null) {
+            if (noOfDeletedProductRecord.intValue() == noOfDeletedInventoryRecord.intValue()) {
+                log.info("Product and inventory record is deleted successfully");
+                return noOfDeletedProductRecord;
+            }
+            else {
+                throw new Exception("Record deleted in product and inventory is not same");
+            }
+        }
+        else {
+            throw new Exception("Fail in deleting inventory");
+        }
     }
 
     @Override

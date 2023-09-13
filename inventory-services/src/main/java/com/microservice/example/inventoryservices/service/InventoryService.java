@@ -5,4 +5,6 @@ import com.microservice.example.inventoryservices.dto.InventoryDto;
 public interface InventoryService {
 
     public InventoryDto addInventory(InventoryDto inventoryDto);
+
+    public Long deleteInventoryByProductCode(String productCode);
 }

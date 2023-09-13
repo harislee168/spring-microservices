@@ -27,4 +27,10 @@ public class InventoryServiceImpl implements InventoryService {
         log.info("Return back the saved inventory as inventory dto");
         return InventoryMapper.inventoryToDto(savedInventory);
     }
+
+    @Override
+    public Long deleteInventoryByProductCode(String productCode) {
+        log.info("Delete inventory by product code");
+        return inventoryRepository.deleteByProductCode(productCode);
+    }
 }
