@@ -1,5 +1,6 @@
 package com.microservice.example.productservices.utils;
 
+import com.microservice.example.productservices.dto.InventoryDto;
 import com.microservice.example.productservices.dto.ProductDto;
 import com.microservice.example.productservices.entity.Product;
 
@@ -24,5 +25,18 @@ public class ProductMapper {
         product.setDescription(productDto.getDescription());
         product.setPrice(productDto.getPrice());
         return product;
+    }
+
+    public static InventoryDto productDtoToInventoryDto(ProductDto productDto) {
+        InventoryDto inventoryDto = new InventoryDto();
+        inventoryDto.setProductCode(productDto.getProductCode());
+        inventoryDto.setQuantity(productDto.getQuantity());
+        return inventoryDto;
+    }
+
+    public static ProductDto productInventoryDtoToDto(Product product, InventoryDto inventoryDto) {
+        ProductDto productDto = productToDto(product);
+        productDto.setQuantity(inventoryDto.getQuantity());
+        return productDto;
     }
 }

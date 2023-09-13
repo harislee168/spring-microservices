@@ -18,10 +18,15 @@ public class ProductController {
 
     private final ProductService productService;
     @PostMapping
-    public ResponseEntity<ProductDto> addProduct(@RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> addProduct(@RequestBody ProductDto productDto){
         log.info("Calling product service add product");
-        ProductDto savedProductDto = productService.addProduct(productDto);
-        return new ResponseEntity<>(savedProductDto, HttpStatus.CREATED);
+        try {
+            ProductDto savedProductDto = productService.addProduct(productDto);
+            return new ResponseEntity<>(savedProductDto, HttpStatus.CREATED);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @DeleteMapping
