@@ -17,6 +17,7 @@
     <modules>
         <module>product-services</module>
         <module>inventory-services</module>
+        <module>order-services</module>
     </modules>
 
     <properties>
