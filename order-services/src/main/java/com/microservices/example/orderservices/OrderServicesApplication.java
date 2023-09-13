@@ -1,4 +1,4 @@
-package com.microservices.example.inventoryservices;
+package com.microservices.example.orderservices;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value="api/inventory")
@@ -47,5 +48,11 @@ public class InventoryController {
     public ResponseEntity<List<InventoryDto>> getAllInventory() {
         List<InventoryDto> inventoryDtoList = inventoryService.getAllInventory();
         return new ResponseEntity<>(inventoryDtoList, HttpStatus.OK);
+    }
+
+    @PatchMapping(value="/createorderverification")
+    public ResponseEntity<Boolean> createOrderVerification(@RequestBody Map<String, Integer> createOrderRequest) throws Exception {
+        Boolean verification = inventoryService.createOrderVerification(createOrderRequest);
+        return new ResponseEntity<>(verification, HttpStatus.OK);
     }
 }

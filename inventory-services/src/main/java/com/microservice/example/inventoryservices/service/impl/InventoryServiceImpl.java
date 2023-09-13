@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -58,4 +60,27 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryList.stream().map(InventoryMapper::inventoryToDto).toList();
     }
 
+    public Boolean createOrderVerification(Map <String, Integer> createOrderRequests) throws Exception {
+        log.info("Retrieve all product codes (key)");
+        Set<String> productCodes = createOrderRequests.keySet();
+        log.info("Get inventory by product codes");
+        List <Inventory> inventoryList = inventoryRepository.findByProductCodeIn(productCodes);
+        log.info("Check the order quantity must be less than or equal to quantity in database");
+        for (Inventory inventory: inventoryList) {
+            int orderQuantity = createOrderRequests.get(inventory.getProductCode());
+            if (orderQuantity > inventory.getQuantity()) {
+                throw new Exception("Order quantity for product " + inventory.getProductCode()
+                        + " is more than what's available");
+            }
+        }
+
+        //nned to divide the loop because the data is persist and quantity is reduced if place the reduce quantity in the first loop
+        log.info("Passed the quantity check, reduce the quantity and save the data");
+        for (Inventory inventory: inventoryList) {
+            int orderQuantity = createOrderRequests.get(inventory.getProductCode());
+            inventory.setQuantity(inventory.getQuantity() - orderQuantity);
+        }
+        inventoryRepository.saveAll(inventoryList);
+        return true;
+    }
 }
