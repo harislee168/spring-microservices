@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     @Override
     public TorderDto createOrder(TorderDto torderDto) throws Exception {
@@ -33,8 +33,8 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toMap(orderItemDto -> orderItemDto.getProductCode(),
                         orderItemDto -> orderItemDto.getQuantity()));
 
-        Boolean verification = webClient.patch()
-                .uri("http://localhost:8082/api/inventory/createorderverification")
+        Boolean verification = webClientBuilder.build().patch()
+                .uri("http://inventory-service/api/inventory/createorderverification")
                 .contentType(MediaType.APPLICATION_JSON).bodyValue(createOrderRequest)
                         .retrieve().bodyToMono(Boolean.class).block();
 

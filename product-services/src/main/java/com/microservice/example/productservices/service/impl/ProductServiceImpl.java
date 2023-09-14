@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService{
 
     private final ProductRepository productRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     @Override
     public ProductDto addProduct(ProductDto productDto) throws Exception {
@@ -44,8 +44,8 @@ public class ProductServiceImpl implements ProductService{
 
         log.info("Call inventory controller to record the inventory of the new product");
         //call the inventory controller to add the quantity
-        InventoryDto savedInventoryDto = webClient.post()
-                .uri("http://localhost:8082/api/inventory")
+        InventoryDto savedInventoryDto = webClientBuilder.build().post()
+                .uri("http://inventory-service/api/inventory")
                 .body(Mono.just(inventoryDto), InventoryDto.class)
                         .retrieve().bodyToMono(InventoryDto.class).block();
 
@@ -64,8 +64,8 @@ public class ProductServiceImpl implements ProductService{
         log.info("Delete the product by productCode");
         Long noOfDeletedProductRecord =  productRepository.deleteByProductCode(productCode);
         log.info("Delete the inventory by productCode");
-        Long noOfDeletedInventoryRecord = webClient.delete()
-                .uri("http://localhost:8082/api/inventory?productCode=" + productCode)
+        Long noOfDeletedInventoryRecord = webClientBuilder.build().delete()
+                .uri("http://inventory-service/api/inventory?productCode=" + productCode)
                 .retrieve().bodyToMono(Long.class).block();
 
         if (noOfDeletedInventoryRecord != null) {
@@ -88,8 +88,8 @@ public class ProductServiceImpl implements ProductService{
         List <Product> productList = productRepository.findAll();
 
         log.info("Get all inventory");
-        Map<String, InventoryDto> inventoryDtoMap = webClient.get()
-                .uri("http://localhost:8082/api/inventory")
+        Map<String, InventoryDto> inventoryDtoMap = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory")
                 .retrieve().bodyToFlux(InventoryDto.class)
                 .collectMap(InventoryDto::getProductCode, Function.identity()).block();
 
