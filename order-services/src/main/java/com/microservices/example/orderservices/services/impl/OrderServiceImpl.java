@@ -1,10 +1,7 @@
 package com.microservices.example.orderservices.services.impl;
 
-import com.microservices.example.orderservices.dto.InventoryDto;
-import com.microservices.example.orderservices.dto.OrderItemDto;
-import com.microservices.example.orderservices.entity.OrderItem;
-import com.microservices.example.orderservices.entity.Torder;
 import com.microservices.example.orderservices.dto.TorderDto;
+import com.microservices.example.orderservices.entity.Torder;
 import com.microservices.example.orderservices.repository.OrderRepository;
 import com.microservices.example.orderservices.services.OrderService;
 import com.microservices.example.orderservices.utils.OrderMapper;
@@ -51,6 +48,15 @@ public class OrderServiceImpl implements OrderService {
         else {
             throw new Exception("Inventory verification fail");
         }
-
     }
+
+    @Override
+    public List<TorderDto> getAllOrder() {
+        log.info("Get all Torder from database");
+        List <Torder> torderList = orderRepository.findAll();
+        log.info("Convert Torder list to TorderDto list and return the list");
+        return torderList.stream().map(OrderMapper::torderToDto).toList();
+    }
+
+
 }
