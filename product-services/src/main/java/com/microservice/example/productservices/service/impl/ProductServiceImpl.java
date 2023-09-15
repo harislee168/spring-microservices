@@ -2,14 +2,17 @@ package com.microservice.example.productservices.service.impl;
 
 import com.microservice.example.productservices.dto.InventoryDto;
 import com.microservice.example.productservices.dto.ProductDto;
+import com.microservice.example.productservices.dto.response.AddProductDtoResponse;
+import com.microservice.example.productservices.dto.response.AllProductDtoResponse;
+import com.microservice.example.productservices.dto.response.DeleteProductDtoResponse;
+import com.microservice.example.productservices.dto.response.ModifiedPriceResponse;
 import com.microservice.example.productservices.entity.Product;
 import com.microservice.example.productservices.repository.ProductRepository;
 import com.microservice.example.productservices.service.ProductService;
 import com.microservice.example.productservices.utils.ProductMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -33,7 +35,8 @@ public class ProductServiceImpl implements ProductService{
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public ProductDto addProduct(ProductDto productDto) throws Exception {
+    @CircuitBreaker(name="${inventory.serviceName}", fallbackMethod="addProductFallbackMethod")
+    public AddProductDtoResponse addProduct(ProductDto productDto) {
         log.info("Convert the product dto to product entity object");
         Product product = ProductMapper.dtoToProduct(productDto);
         log.info("Create the Inventory dto");
@@ -52,15 +55,17 @@ public class ProductServiceImpl implements ProductService{
         log.info("Return back the saved product as product dto");
         if (savedInventoryDto != null) {
             log.info("Product and inventory record is saved successfully");
-            return ProductMapper.productInventoryDtoToDto(savedProduct, savedInventoryDto);
+            ProductDto savedProductDto = ProductMapper.productInventoryDtoToDto(savedProduct, savedInventoryDto);
+            return new AddProductDtoResponse(savedProductDto, null);
         }
         else {
-            throw new Exception("Fail in saving inventory");
+            return new AddProductDtoResponse(null, "Fail in saving inventory");
         }
     }
 
     @Override
-    public Long deleteProduct(String productCode) throws Exception {
+    @CircuitBreaker(name="${inventory.serviceName}", fallbackMethod="deleteProductFallbackMethod")
+    public DeleteProductDtoResponse deleteProduct(String productCode) {
         log.info("Delete the product by productCode");
         Long noOfDeletedProductRecord =  productRepository.deleteByProductCode(productCode);
         log.info("Delete the inventory by productCode");
@@ -71,19 +76,20 @@ public class ProductServiceImpl implements ProductService{
         if (noOfDeletedInventoryRecord != null) {
             if (noOfDeletedProductRecord.intValue() == noOfDeletedInventoryRecord.intValue()) {
                 log.info("Product and inventory record is deleted successfully");
-                return noOfDeletedProductRecord;
+                return new DeleteProductDtoResponse(noOfDeletedProductRecord.intValue(), null);
             }
             else {
-                throw new Exception("Record deleted in product and inventory is not same");
+                return new DeleteProductDtoResponse(0, "Record deleted in product and inventory is not same");
             }
         }
         else {
-            throw new Exception("Fail in deleting inventory");
+            return new DeleteProductDtoResponse(0, "Fail in deleting inventory");
         }
     }
 
     @Override
-    public List<ProductDto> getAllProduct() {
+    @CircuitBreaker(name="${inventory.serviceName}", fallbackMethod="getAllProductFallbackMethod")
+    public AllProductDtoResponse getAllProduct() {
         log.info("Get all product");
         List <Product> productList = productRepository.findAll();
 
@@ -94,7 +100,6 @@ public class ProductServiceImpl implements ProductService{
                 .collectMap(InventoryDto::getProductCode, Function.identity()).block();
 
         if (inventoryDtoMap != null) {
-            log.info("Create complete product dto list");
             List <ProductDto> productDtoList = new ArrayList<>();
             for (Product product: productList) {
                 ProductDto productDto = ProductMapper.productToDto(product);
@@ -103,18 +108,20 @@ public class ProductServiceImpl implements ProductService{
                     productDto.setQuantity(inventoryDto.getQuantity());
                 productDtoList.add(productDto);
             }
-            return productDtoList;
+            return new AllProductDtoResponse(productDtoList, null);
         }
         else {
             log.info("Cannot find inventory");
-            return productList.stream().map(ProductMapper::productToDto).toList();
+            List<ProductDto> productDtoList = productList.stream().map(ProductMapper::productToDto).toList();
+            return new AllProductDtoResponse(productDtoList, null);
         }
     }
 
     @Override
-    public void modifyPrice(String productCode, BigDecimal price) throws Exception {
+    public ModifiedPriceResponse modifyPrice(String productCode, BigDecimal price) {
         log.info("Get product by product code");
         Optional <Product> optionalProduct = productRepository.findByProductCode(productCode);
+        ModifiedPriceResponse modifiedPriceResponse = new ModifiedPriceResponse(true, null);
         if (optionalProduct.isPresent()) {
             log.info("Set the product price and save");
             Product product = optionalProduct.get();
@@ -122,7 +129,24 @@ public class ProductServiceImpl implements ProductService{
             productRepository.save(product);
         }
         else {
-            throw new Exception("Invalid product code: Product not found");
+            modifiedPriceResponse.setPriceModified(false);
+            modifiedPriceResponse.setErrorMessage("Invalid product code: Product not found");
         }
+        return modifiedPriceResponse;
+    }
+
+    public AddProductDtoResponse addProductFallbackMethod(ProductDto productDto, Exception e) {
+        log.info("Fail to add new product. Execute fall back method");
+        return new AddProductDtoResponse(null, "Something is wrong with inventory");
+    }
+
+    public AllProductDtoResponse getAllProductFallbackMethod(Exception e) {
+        log.info("Fail to get all product. Execute fall back method");
+        return new AllProductDtoResponse(null, "Something is wrong with inventory");
+    }
+
+    public DeleteProductDtoResponse deleteProductFallbackMethod(String productCode, Exception e) {
+        log.info("Fail to delete product: " + productCode + " Execute fall back method");
+        return new DeleteProductDtoResponse(0, "Something is wrong with inventory");
     }
 }

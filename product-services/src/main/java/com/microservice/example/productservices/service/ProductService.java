@@ -1,14 +1,17 @@
 package com.microservice.example.productservices.service;
 
 import com.microservice.example.productservices.dto.ProductDto;
+import com.microservice.example.productservices.dto.response.AddProductDtoResponse;
+import com.microservice.example.productservices.dto.response.AllProductDtoResponse;
+import com.microservice.example.productservices.dto.response.DeleteProductDtoResponse;
+import com.microservice.example.productservices.dto.response.ModifiedPriceResponse;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public interface ProductService {
 
-    public ProductDto addProduct(ProductDto productDto) throws Exception;
-    public Long deleteProduct(String productCode) throws Exception;
-    public List <ProductDto> getAllProduct();
-    public void modifyPrice(String productCode, BigDecimal price) throws Exception;
+    public AddProductDtoResponse addProduct(ProductDto productDto);
+    public DeleteProductDtoResponse deleteProduct(String productCode);
+    public AllProductDtoResponse getAllProduct();
+    public ModifiedPriceResponse modifyPrice(String productCode, BigDecimal price);
 }

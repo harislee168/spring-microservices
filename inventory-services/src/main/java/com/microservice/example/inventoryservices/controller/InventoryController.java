@@ -1,6 +1,8 @@
 package com.microservice.example.inventoryservices.controller;
 
 import com.microservice.example.inventoryservices.dto.InventoryDto;
+import com.microservice.example.inventoryservices.dto.response.CreateOrderVerificationResponse;
+import com.microservice.example.inventoryservices.dto.response.ModifyQuantityResponse;
 import com.microservice.example.inventoryservices.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value="api/inventory")
+@RequestMapping(value = "api/inventory")
 @RequiredArgsConstructor
 @Slf4j
 public class InventoryController {
@@ -27,32 +29,29 @@ public class InventoryController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Long> deleteInventory(@RequestParam(value="productCode") String productCode) {
+    public ResponseEntity<Long> deleteInventory(@RequestParam(value = "productCode") String productCode) {
         log.info("Calling inventory service delete inventory");
         Long noOfRecordDeleted = inventoryService.deleteInventoryByProductCode(productCode);
         return new ResponseEntity<>(noOfRecordDeleted, HttpStatus.OK);
     }
 
-    @PutMapping(value="/modifyquantity")
-    public ResponseEntity<Void> modifyQuantity(@RequestParam(value="productCode") String productCode,
-                                               @RequestParam(value="quantity") int quantity) {
-        try {
-            inventoryService.modifyQuantity(productCode, quantity);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PutMapping(value = "/modifyquantity")
+    public ResponseEntity<ModifyQuantityResponse> modifyQuantity(@RequestParam(value = "productCode") String productCode,
+                                               @RequestParam(value = "quantity") int quantity) {
+        ModifyQuantityResponse modifyQuantityResponse = inventoryService.modifyQuantity(productCode, quantity);
+        return new ResponseEntity<>(modifyQuantityResponse, HttpStatus.OK);
+
     }
+
     @GetMapping
     public ResponseEntity<List<InventoryDto>> getAllInventory() {
         List<InventoryDto> inventoryDtoList = inventoryService.getAllInventory();
         return new ResponseEntity<>(inventoryDtoList, HttpStatus.OK);
     }
 
-    @PatchMapping(value="/createorderverification")
-    public ResponseEntity<Boolean> createOrderVerification(@RequestBody Map<String, Integer> createOrderRequest) throws Exception {
-        Boolean verification = inventoryService.createOrderVerification(createOrderRequest);
+    @PatchMapping(value = "/createorderverification")
+    public ResponseEntity<CreateOrderVerificationResponse> createOrderVerification(@RequestBody Map<String, Integer> createOrderRequest) {
+        CreateOrderVerificationResponse verification = inventoryService.createOrderVerification(createOrderRequest);
         return new ResponseEntity<>(verification, HttpStatus.OK);
     }
 }

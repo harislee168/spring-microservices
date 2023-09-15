@@ -1,6 +1,8 @@
 package com.microservice.example.inventoryservices.service.impl;
 
 import com.microservice.example.inventoryservices.dto.InventoryDto;
+import com.microservice.example.inventoryservices.dto.response.CreateOrderVerificationResponse;
+import com.microservice.example.inventoryservices.dto.response.ModifyQuantityResponse;
 import com.microservice.example.inventoryservices.entity.Inventory;
 import com.microservice.example.inventoryservices.repository.InventoryRepository;
 import com.microservice.example.inventoryservices.service.InventoryService;
@@ -39,9 +41,10 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public void modifyQuantity(String productCode, int quantity) throws Exception {
+    public ModifyQuantityResponse modifyQuantity(String productCode, int quantity) {
         log.info("Get inventory by product code");
         Optional <Inventory> optionalInventory = inventoryRepository.findByProductCode(productCode);
+        ModifyQuantityResponse modifyQuantityResponse = new ModifyQuantityResponse(true, null);
         if (optionalInventory.isPresent()) {
             log.info("Set the quantity and save");
             Inventory inventory = optionalInventory.get();
@@ -49,28 +52,33 @@ public class InventoryServiceImpl implements InventoryService {
             inventoryRepository.save(inventory);
         }
         else {
-            throw new Exception("Invalid product code: Inventory not found");
+            modifyQuantityResponse.setQuantityModified(false);
+            modifyQuantityResponse.setErrorMessage("Invalid product code: Inventory not found");
         }
+        return modifyQuantityResponse;
     }
 
     @Override
     public List<InventoryDto> getAllInventory() {
-        log.info("Get all inventory");
         List <Inventory> inventoryList = inventoryRepository.findAll();
         return inventoryList.stream().map(InventoryMapper::inventoryToDto).toList();
     }
 
-    public Boolean createOrderVerification(Map <String, Integer> createOrderRequests) throws Exception {
+    public CreateOrderVerificationResponse createOrderVerification(Map <String, Integer> createOrderRequests) {
         log.info("Retrieve all product codes (key)");
         Set<String> productCodes = createOrderRequests.keySet();
         log.info("Get inventory by product codes");
         List <Inventory> inventoryList = inventoryRepository.findByProductCodeIn(productCodes);
         log.info("Check the order quantity must be less than or equal to quantity in database");
+        CreateOrderVerificationResponse createOrderVerificationResponse = new CreateOrderVerificationResponse(true, null);
+
         for (Inventory inventory: inventoryList) {
             int orderQuantity = createOrderRequests.get(inventory.getProductCode());
             if (orderQuantity > inventory.getQuantity()) {
-                throw new Exception("Order quantity for product " + inventory.getProductCode()
+                createOrderVerificationResponse.setVerification(false);
+                createOrderVerificationResponse.setErrorMessage("Order quantity for product " + inventory.getProductCode()
                         + " is more than what's available");
+                return createOrderVerificationResponse;
             }
         }
 
@@ -81,6 +89,6 @@ public class InventoryServiceImpl implements InventoryService {
             inventory.setQuantity(inventory.getQuantity() - orderQuantity);
         }
         inventoryRepository.saveAll(inventoryList);
-        return true;
+        return createOrderVerificationResponse;
     }
 }

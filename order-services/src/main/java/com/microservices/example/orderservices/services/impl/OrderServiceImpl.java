@@ -1,10 +1,13 @@
 package com.microservices.example.orderservices.services.impl;
 
 import com.microservices.example.orderservices.dto.TorderDto;
+import com.microservices.example.orderservices.dto.response.CreateOrderVerificationResponse;
+import com.microservices.example.orderservices.dto.response.TorderDtoResponse;
 import com.microservices.example.orderservices.entity.Torder;
 import com.microservices.example.orderservices.repository.OrderRepository;
 import com.microservices.example.orderservices.services.OrderService;
 import com.microservices.example.orderservices.utils.OrderMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,27 +29,30 @@ public class OrderServiceImpl implements OrderService {
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public TorderDto createOrder(TorderDto torderDto) throws Exception {
+    @CircuitBreaker(name="inventory", fallbackMethod="createOrderFallbackMethod")
+    public TorderDtoResponse createOrder(TorderDto torderDto) {
         //first check the product inside the order items are all available in inventory and has enough quantity
         log.info("Create map consist of productCode as key and quantity as value");
         Map<String, Integer> createOrderRequest = torderDto.getOrderItemDtoList().stream()
                 .collect(Collectors.toMap(orderItemDto -> orderItemDto.getProductCode(),
                         orderItemDto -> orderItemDto.getQuantity()));
 
-        Boolean verification = webClientBuilder.build().patch()
+        CreateOrderVerificationResponse createOrderVerificationResponse = webClientBuilder.build().patch()
                 .uri("http://inventory-service/api/inventory/createorderverification")
                 .contentType(MediaType.APPLICATION_JSON).bodyValue(createOrderRequest)
-                        .retrieve().bodyToMono(Boolean.class).block();
+                        .retrieve().bodyToMono(CreateOrderVerificationResponse.class).block();
 
-        if (verification != null && verification) {
+        if (createOrderVerificationResponse != null && createOrderVerificationResponse.isVerification()) {
             log.info("Inventory verification is successful");
             log.info("Convert the TorderDto to Torder");
             Torder torder = OrderMapper.dtoToTorder(torderDto);
             Torder savedTorder = orderRepository.save(torder);
-            return OrderMapper.torderToDto(savedTorder);
+            TorderDto savedTorderDto = OrderMapper.torderToDto(savedTorder);
+            return new TorderDtoResponse(savedTorderDto, null);
         }
         else {
-            throw new Exception("Inventory verification fail");
+            return new TorderDtoResponse(null,
+                    "Fail to create order because the quantity is more than available stock");
         }
     }
 
@@ -58,5 +64,9 @@ public class OrderServiceImpl implements OrderService {
         return torderList.stream().map(OrderMapper::torderToDto).toList();
     }
 
+    public TorderDtoResponse createOrderFallbackMethod(TorderDto torderDto, RuntimeException runtimeException) {
+        log.info("Cannot add product, executing fallback method");
+        return new TorderDtoResponse(null, "Something went wrong with Inventory service, please try again later");
+    }
 
 }
