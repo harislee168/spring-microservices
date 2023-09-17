@@ -5,6 +5,8 @@ import com.microservices.example.orderservices.dto.response.TorderDtoResponse;
 import com.microservices.example.orderservices.services.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +17,12 @@ import java.util.List;
 @RequestMapping(value = "api/order")
 @RequiredArgsConstructor
 @Slf4j
+@RefreshScope
 public class OrderController {
 
     private final OrderService orderService;
+    @Value("${spring.testmessage}")
+    private String testMessage;
 
     @PostMapping(value = "/createorder")
     public ResponseEntity<TorderDtoResponse> createOrder(@RequestBody TorderDto torderDto) {
@@ -31,5 +36,10 @@ public class OrderController {
         log.info("Calling the getAllOrder function in order service");
         List<TorderDto> torderDtoList = orderService.getAllOrder();
         return new ResponseEntity<>(torderDtoList, HttpStatus.OK);
+    }
+
+    @GetMapping(value="/testmessage")
+    public ResponseEntity<String> testMessage() {
+        return new ResponseEntity<>("Hello " + testMessage, HttpStatus.OK);
     }
 }

@@ -6,6 +6,8 @@ import com.microservice.example.inventoryservices.dto.response.ModifyQuantityRes
 import com.microservice.example.inventoryservices.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +19,12 @@ import java.util.Map;
 @RequestMapping(value = "api/inventory")
 @RequiredArgsConstructor
 @Slf4j
+@RefreshScope
 public class InventoryController {
 
     private final InventoryService inventoryService;
+    @Value("${spring.testmessage}")
+    private String testMessage;
 
     @PostMapping
     public ResponseEntity<InventoryDto> addInventory(@RequestBody InventoryDto inventoryDto) {
@@ -53,5 +58,10 @@ public class InventoryController {
     public ResponseEntity<CreateOrderVerificationResponse> createOrderVerification(@RequestBody Map<String, Integer> createOrderRequest) {
         CreateOrderVerificationResponse verification = inventoryService.createOrderVerification(createOrderRequest);
         return new ResponseEntity<>(verification, HttpStatus.OK);
+    }
+
+    @GetMapping(value="/testmessage")
+    public ResponseEntity<String> testMessage() {
+        return new ResponseEntity<>("Hello " + testMessage, HttpStatus.OK);
     }
 }

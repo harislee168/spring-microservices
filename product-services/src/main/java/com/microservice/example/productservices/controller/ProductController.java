@@ -8,6 +8,8 @@ import com.microservice.example.productservices.dto.response.ModifiedPriceRespon
 import com.microservice.example.productservices.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +20,12 @@ import java.math.BigDecimal;
 @RequestMapping(value = "api/product")
 @RequiredArgsConstructor
 @Slf4j
+@RefreshScope
 public class ProductController {
 
     private final ProductService productService;
+    @Value("${spring.testmessage}")
+    private String testMessage;
 
     @PostMapping
     public ResponseEntity<AddProductDtoResponse> addProduct(@RequestBody ProductDto productDto) {
@@ -48,5 +53,10 @@ public class ProductController {
                                                              @RequestParam(value = "price") BigDecimal price) {
         ModifiedPriceResponse modifiedPriceResponse = productService.modifyPrice(productCode, price);
         return new ResponseEntity<>(modifiedPriceResponse, HttpStatus.OK);
+    }
+
+    @GetMapping(value="/testmessage")
+    public ResponseEntity<String> testMessage() {
+        return new ResponseEntity<>("Hello " + testMessage, HttpStatus.OK);
     }
 }
