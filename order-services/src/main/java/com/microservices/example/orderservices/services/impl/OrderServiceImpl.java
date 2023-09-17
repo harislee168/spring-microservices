@@ -8,6 +8,8 @@ import com.microservices.example.orderservices.repository.OrderRepository;
 import com.microservices.example.orderservices.services.OrderService;
 import com.microservices.example.orderservices.utils.OrderMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -27,9 +29,10 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
+    private final Tracer tracer;
 
     @Override
-    @CircuitBreaker(name="inventory", fallbackMethod="createOrderFallbackMethod")
+    @CircuitBreaker(name = "inventory", fallbackMethod = "createOrderFallbackMethod")
     public TorderDtoResponse createOrder(TorderDto torderDto) {
         //first check the product inside the order items are all available in inventory and has enough quantity
         log.info("Create map consist of productCode as key and quantity as value");
@@ -37,29 +40,34 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toMap(orderItemDto -> orderItemDto.getProductCode(),
                         orderItemDto -> orderItemDto.getQuantity()));
 
-        CreateOrderVerificationResponse createOrderVerificationResponse = webClientBuilder.build().patch()
-                .uri("http://inventory-service/api/inventory/createorderverification")
-                .contentType(MediaType.APPLICATION_JSON).bodyValue(createOrderRequest)
-                        .retrieve().bodyToMono(CreateOrderVerificationResponse.class).block();
+        log.info("Create crateOrderVerification Span");
+        Span nextSpan = tracer.nextSpan().name("crateOrderVerificationSpan");
+        try (Tracer.SpanInScope spanInScope = tracer.withSpan(nextSpan.start())) {
+            CreateOrderVerificationResponse createOrderVerificationResponse = webClientBuilder.build().patch()
+                    .uri("http://inventory-service/api/inventory/createorderverification")
+                    .contentType(MediaType.APPLICATION_JSON).bodyValue(createOrderRequest)
+                    .retrieve().bodyToMono(CreateOrderVerificationResponse.class).block();
 
-        if (createOrderVerificationResponse != null && createOrderVerificationResponse.isVerification()) {
-            log.info("Inventory verification is successful");
-            log.info("Convert the TorderDto to Torder");
-            Torder torder = OrderMapper.dtoToTorder(torderDto);
-            Torder savedTorder = orderRepository.save(torder);
-            TorderDto savedTorderDto = OrderMapper.torderToDto(savedTorder);
-            return new TorderDtoResponse(savedTorderDto, null);
-        }
-        else {
-            return new TorderDtoResponse(null,
-                    "Fail to create order because the quantity is more than available stock");
+            if (createOrderVerificationResponse != null && createOrderVerificationResponse.isVerification()) {
+                log.info("Inventory verification is successful");
+                log.info("Convert the TorderDto to Torder");
+                Torder torder = OrderMapper.dtoToTorder(torderDto);
+                Torder savedTorder = orderRepository.save(torder);
+                TorderDto savedTorderDto = OrderMapper.torderToDto(savedTorder);
+                return new TorderDtoResponse(savedTorderDto, null);
+            } else {
+                return new TorderDtoResponse(null,
+                        "Fail to create order because the quantity is more than available stock");
+            }
+        } finally {
+            nextSpan.end();
         }
     }
 
     @Override
     public List<TorderDto> getAllOrder() {
         log.info("Get all Torder from database");
-        List <Torder> torderList = orderRepository.findAll();
+        List<Torder> torderList = orderRepository.findAll();
         log.info("Convert Torder list to TorderDto list and return the list");
         return torderList.stream().map(OrderMapper::torderToDto).toList();
     }
