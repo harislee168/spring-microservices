@@ -51,11 +51,5 @@ Sample of the JSON input for create new order as follow: <br />
 }
 2. http://localhost:8080/api/order use HTTP Get method to view all product. <br />
 
-### RabbitMQ for cloud bus configuration
-First make sure you downloaded docker and run your docker desktop then run the following commands<br />
-docker pull rabbitmq:3.11.0 <br />
-docker run --rm -it -p 5672:5672 rabbitmq:3.11.0
-
-### Zipkin
-docker run --rm -it --name zipkin -p 9411:9411 openzipkin/zipkin <br/>
-then go to http://localhost:9411/zipkin/ to check the trace <br />
+### Running the application
+First go to the root folder and type docker compose up -d in your terminal. This is to activate RabbitMQ, Zipkin, and Kafka <br />
