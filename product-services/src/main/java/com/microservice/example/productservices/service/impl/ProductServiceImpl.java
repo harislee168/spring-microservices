@@ -55,7 +55,7 @@ public class ProductServiceImpl implements ProductService {
             log.info("Call inventory controller to record the inventory of the new product");
             //call the inventory controller to add the quantity
             InventoryDto savedInventoryDto = webClientBuilder.build().post()
-                    .uri("http://inventory-service/api/inventory")
+                    .uri("http://inventory-service:8282/api/inventory")
                     .body(Mono.just(inventoryDto), InventoryDto.class)
                     .retrieve().bodyToMono(InventoryDto.class).block();
 
@@ -82,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
         try (Tracer.SpanInScope spanInScope = tracer.withSpan(nextSpan.start())) {
             log.info("Delete the inventory by productCode");
             Long noOfDeletedInventoryRecord = webClientBuilder.build().delete()
-                    .uri("http://inventory-service/api/inventory?productCode=" + productCode)
+                    .uri("http://inventory-service:8282/api/inventory?productCode=" + productCode)
                     .retrieve().bodyToMono(Long.class).block();
 
             if (noOfDeletedInventoryRecord != null) {
@@ -111,7 +111,7 @@ public class ProductServiceImpl implements ProductService {
         try (Tracer.SpanInScope spanInScope = tracer.withSpan(nextSpan.start())) {
             log.info("Get all inventory");
             Map<String, InventoryDto> inventoryDtoMap = webClientBuilder.build().get()
-                    .uri("http://inventory-service/api/inventory")
+                    .uri("http://inventory-service:8282/api/inventory")
                     .retrieve().bodyToFlux(InventoryDto.class)
                     .collectMap(InventoryDto::getProductCode, Function.identity()).block();
 

@@ -51,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
         Span nextSpan = tracer.nextSpan().name("crateOrderVerificationSpan");
         try (Tracer.SpanInScope spanInScope = tracer.withSpan(nextSpan.start())) {
             CreateOrderVerificationResponse createOrderVerificationResponse = webClientBuilder.build().patch()
-                    .uri("http://inventory-service/api/inventory/createorderverification")
+                    .uri("http://inventory-service:8282/api/inventory/createorderverification")
                     .contentType(MediaType.APPLICATION_JSON).bodyValue(createOrderRequest)
                     .retrieve().bodyToMono(CreateOrderVerificationResponse.class).block();
 
