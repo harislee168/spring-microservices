@@ -1,9 +1,11 @@
 # spring-microservices
 
 ## Prerequisites
-Run the sql files in your mysql to crete the database and insert initial values
-change the username and password of mysql in the application.properties in product-services, 
-inventory-services, and order-services
+Download Docker Desktop and Run Docker Desktop <br />
+Download Postman <br />
+Clone the project, git clone git@github.com:harislee168/spring-microservices.git <br />
+Then run docker compose up -d in the root folder <br />
+Use Postman and test the below url and command
 
 ### Product Services
 1. http://localhost:8080/api/product use HTTP Get method to view all product. <br />
@@ -50,6 +52,3 @@ Sample of the JSON input for create new order as follow: <br />
    ]
 }
 2. http://localhost:8080/api/order use HTTP Get method to view all product. <br />
-
-### Running the application
-First go to the root folder and type docker compose up -d in your terminal. This is to activate RabbitMQ, Zipkin, and Kafka <br />
