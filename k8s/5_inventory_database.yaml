@@ -1,0 +1,65 @@
+#Inventory MySQL setting
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-inventory-claim
+  labels:
+    app: mysql-inventory-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-inventory
+  labels:
+    app: mysql-inventory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-inventory
+  template:
+    metadata:
+      labels:
+        app: mysql-inventory
+    spec:
+      containers:
+        - name: mysql-inventory
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: inventoryservices
+          volumeMounts:
+            - name: mysql-inventory-storage
+              mountPath: /var/lib/mysql
+          ports:
+            - containerPort: 3306
+      volumes:
+        - name: mysql-inventory-storage
+          persistentVolumeClaim:
+            claimName: mysql-inventory-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-inventory
+  labels:
+    app: mysql-inventory
+    tier: database
+spec:
+  selector:
+    app: mysql-inventory
+  ports:
+    - port: 3306
+      targetPort: 3306
+
+
+

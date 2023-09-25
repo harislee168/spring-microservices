@@ -48,29 +48,29 @@ services:
       - "3307:3306"
     restart: unless-stopped
 
-#  mysql-product:
-#    container_name: mysql-product
-#    image: mysql
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: productservices
-#    volumes:
-#      - ./mysql-product:/var/lib/mysql
-#    ports:
-#      - "3308:3306"
-#    restart: unless-stopped
+  mysql-product:
+    container_name: mysql-product
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: productservices
+    volumes:
+      - ./mysql-product:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    restart: unless-stopped
 
-#  mysql-order:
-#    container_name: mysql-order
-#    image: mysql
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: orderservices
-#    volumes:
-#      - ./mysql-order:/var/lib/mysql
-#    ports:
-#      - "3309:3306"
-#    restart: unless-stopped
+  mysql-order:
+    container_name: mysql-order
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: orderservices
+    volumes:
+      - ./mysql-order:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    restart: unless-stopped
 
   discovery-server:
     image: harislukman/discovery-server:latest
@@ -119,38 +119,38 @@ services:
       - config-server
       - discovery-server
 
-#  product-service:
-#    image: harislukman/product-services:latest
-#    container_name: product-service
-#    pull_policy: always
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    depends_on:
-#      - zipkin
-#      - mysql-product
-#      - config-server
-#      - discovery-server
+  product-service:
+    image: harislukman/product-services:latest
+    container_name: product-service
+    pull_policy: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      - mysql-product
+      - config-server
+      - discovery-server
 
-#  order-service:
-#    image: harislukman/order-services:latest
-#    container_name: order-service
-#    pull_policy: always
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    depends_on:
-#      - zipkin
-#      - mysql-order
-#      - config-server
-#      - discovery-server
-#      - broker
+  order-service:
+    image: harislukman/order-services:latest
+    container_name: order-service
+    pull_policy: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      - mysql-order
+      - config-server
+      - discovery-server
+      - broker
 
-#  notification-service:
-#    image: harislukman/notification-services:latest
-#    container_name: notification-service
-#    pull_policy: always
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    depends_on:
-#      - config-server
-#      - discovery-server
-#      - broker
+  notification-service:
+    image: harislukman/notification-services:latest
+    container_name: notification-service
+    pull_policy: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - config-server
+      - discovery-server
+      - broker

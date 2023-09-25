@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-order-claim
+  labels:
+    app: mysql-order-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-order
+  labels:
+    app: mysql-order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-order
+  template:
+    metadata:
+      labels:
+        app: mysql-order
+    spec:
+      containers:
+        - name: mysql-order
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: orderservices
+          volumeMounts:
+            - name: mysql-order-storage
+              mountPath: /var/lib/mysql
+          ports:
+            - containerPort: 3306
+      volumes:
+        - name: mysql-order-storage
+          persistentVolumeClaim:
+            claimName: mysql-order-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-order
+  labels:
+    app: mysql-order
+spec:
+  selector:
+    app: mysql-order
+    tier: database
+  clusterIP: None
+  ports:
+    - port: 3306
+      targetPort: 3306

@@ -1,0 +1,63 @@
+#Product MySQL setting
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-product-claim
+  labels:
+    app: mysql-product-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-product
+  labels:
+    app: mysql-product
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-product
+  template:
+    metadata:
+      labels:
+        app: mysql-product
+    spec:
+      containers:
+        - name: mysql-product
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: productservices
+          volumeMounts:
+            - name: mysql-product-storage
+              mountPath: /var/lib/mysql
+          ports:
+            - containerPort: 3306
+      volumes:
+        - name: mysql-product-storage
+          persistentVolumeClaim:
+            claimName: mysql-product-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-product
+  labels:
+    app: mysql-product
+spec:
+  selector:
+    app: mysql-product
+    tier: database
+  clusterIP: None
+  ports:
+    - port: 3306
+      targetPort: 3306
