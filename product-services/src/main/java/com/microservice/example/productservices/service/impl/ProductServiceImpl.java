@@ -57,7 +57,9 @@ public class ProductServiceImpl implements ProductService {
             InventoryDto savedInventoryDto = webClientBuilder.build().post()
                     .uri("http://inventory-service/api/inventory")
                     .body(Mono.just(inventoryDto), InventoryDto.class)
-                    .retrieve().bodyToMono(InventoryDto.class).block();
+                    .retrieve()
+                    .bodyToMono(InventoryDto.class)
+                    .block();
 
             log.info("Return back the saved product as product dto");
             if (savedInventoryDto != null) {
@@ -83,7 +85,9 @@ public class ProductServiceImpl implements ProductService {
             log.info("Delete the inventory by productCode");
             Long noOfDeletedInventoryRecord = webClientBuilder.build().delete()
                     .uri("http://inventory-service/api/inventory?productCode=" + productCode)
-                    .retrieve().bodyToMono(Long.class).block();
+                    .retrieve()
+                    .bodyToMono(Long.class)
+                    .block();
 
             if (noOfDeletedInventoryRecord != null) {
                 if (noOfDeletedProductRecord.intValue() == noOfDeletedInventoryRecord.intValue()) {
@@ -112,8 +116,10 @@ public class ProductServiceImpl implements ProductService {
             log.info("Get all inventory");
             Map<String, InventoryDto> inventoryDtoMap = webClientBuilder.build().get()
                     .uri("http://inventory-service/api/inventory")
-                    .retrieve().bodyToFlux(InventoryDto.class)
-                    .collectMap(InventoryDto::getProductCode, Function.identity()).block();
+                    .retrieve()
+                    .bodyToFlux(InventoryDto.class)
+                    .collectMap(InventoryDto::getProductCode, Function.identity())
+                    .block();
 
             if (inventoryDtoMap != null) {
                 List<ProductDto> productDtoList = new ArrayList<>();
